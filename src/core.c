@@ -41,8 +41,8 @@
 
 extern int tcp_read_time_out;
 extern int tcp_connect_time_out;
-extern int proxychains_quiet_mode;
-extern unsigned int proxychains_proxy_offset;
+extern int pseudo_quiet_mode;
+extern unsigned int pseudo_proxy_offset;
 extern unsigned int remote_dns_subnet;
 
 static int poll_retry(struct pollfd *fds, nfds_t nfsd, int timeout) {
@@ -105,10 +105,10 @@ static void encode_base_64(char *src, char *dest, int max_len) {
 	*dest++ = 0;
 }
 
-void proxychains_write_log(char *str, ...) {
+void pseudo_write_log(char *str, ...) {
 	char buff[1024*20];
 	va_list arglist;
-	if(!proxychains_quiet_mode) {
+	if(!pseudo_quiet_mode) {
 		va_start(arglist, str);
 		vsnprintf(buff, sizeof(buff), str, arglist);
 		va_end(arglist);
@@ -210,7 +210,7 @@ static int tunnel_to(int sock, ip_type ip, unsigned short port, proxy_type pt, c
 	size_t passlen = strlen(pass);
 
 	if(ulen > 0xFF || passlen > 0xFF || dns_len > 0xFF) {
-		proxychains_write_log(LOG_PREFIX "error: maximum size of 255 for user/pass or domain name!\n");
+		pseudo_write_log(LOG_PREFIX "error: maximum size of 255 for user/pass or domain name!\n");
 		goto err;
 	}
 
@@ -223,7 +223,7 @@ static int tunnel_to(int sock, ip_type ip, unsigned short port, proxy_type pt, c
 		case HTTP_TYPE:{
 			if(!dns_len) {
 				if(!inet_ntop(v6?AF_INET6:AF_INET,ip.addr.v6,ip_buf,sizeof ip_buf)) {
-					proxychains_write_log(LOG_PREFIX "error: ip address conversion failed\n");
+					pseudo_write_log(LOG_PREFIX "error: ip address conversion failed\n");
 					goto err;
 				}
 				dns_name = ip_buf;
@@ -271,7 +271,7 @@ static int tunnel_to(int sock, ip_type ip, unsigned short port, proxy_type pt, c
 		break;
 		case SOCKS4_TYPE:{
 			if(v6) {
-				proxychains_write_log(LOG_PREFIX "error: SOCKS4 doesn't support ipv6 addresses\n");
+				pseudo_write_log(LOG_PREFIX "error: SOCKS4 doesn't support ipv6 addresses\n");
 				goto err;
 			}
 			buff[0] = 4;	// socks version
@@ -431,7 +431,7 @@ static int start_chain(int *fd, proxy_data * pd, char *begin_mark) {
 	if(!inet_ntop(v6?AF_INET6:AF_INET,pd->ip.addr.v6,ip_buf,sizeof ip_buf))
 		goto error;
 
-	proxychains_write_log(LOG_PREFIX "%s " TP " %s:%d ",
+	pseudo_write_log(LOG_PREFIX "%s " TP " %s:%d ",
 			      begin_mark, ip_buf, htons(pd->port));
 	pd->ps = PLAY_STATE;
 	struct sockaddr_in addr = {
@@ -451,7 +451,7 @@ static int start_chain(int *fd, proxy_data * pd, char *begin_mark) {
 	pd->ps = BUSY_STATE;
 	return SUCCESS;
 	error1:
-	proxychains_write_log(TP " timeout\n");
+	pseudo_write_log(TP " timeout\n");
 	error:
 	if(*fd != -1)
 		close(*fd);
@@ -527,14 +527,14 @@ static int chain_step(int ns, proxy_data * pfrom, proxy_data * pto) {
 	usenumericip:
 		if(!inet_ntop(v6?AF_INET6:AF_INET,pto->ip.addr.v6,ip_buf,sizeof ip_buf)) {
 			pto->ps = DOWN_STATE;
-			proxychains_write_log("<--ip conversion error!\n");
+			pseudo_write_log("<--ip conversion error!\n");
 			close(ns);
 			return SOCKET_ERROR;
 		}
 		hostname = ip_buf;
 	}
 
-	proxychains_write_log(TP " %s:%d ", hostname, htons(pto->port));
+	pseudo_write_log(TP " %s:%d ", hostname, htons(pto->port));
 	retcode = tunnel_to(ns, pto->ip, pto->port, pfrom->pt, pfrom->user, pfrom->pass);
 	switch (retcode) {
 		case SUCCESS:
@@ -542,12 +542,12 @@ static int chain_step(int ns, proxy_data * pfrom, proxy_data * pto) {
 			break;
 		case BLOCKED:
 			pto->ps = BLOCKED_STATE;
-			proxychains_write_log("<--denied\n");
+			pseudo_write_log("<--denied\n");
 			close(ns);
 			break;
 		case SOCKET_ERROR:
 			pto->ps = DOWN_STATE;
-			proxychains_write_log("<--socket error or timeout!\n");
+			pseudo_write_log("<--socket error or timeout!\n");
 			close(ns);
 			break;
 	}
@@ -593,7 +593,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 				}
 				p1 = p2;
 			}
-			//proxychains_write_log(TP);
+			//pseudo_write_log(TP);
 			p3->ip = target_ip;
 			p3->port = target_port;
 			if(SUCCESS != chain_step(ns, p1, p3))
@@ -602,7 +602,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 
 		case ROUND_ROBIN_TYPE:
 			alive_count = calc_alive(pd, proxy_count);
-			curr_pos = offset = proxychains_proxy_offset;
+			curr_pos = offset = pseudo_proxy_offset;
 			if(alive_count < max_chain)
 				goto error_more;
                         PDEBUG("1:rr_offset = %d, curr_pos = %d\n", offset, curr_pos);
@@ -616,7 +616,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 				} else if (looped && rc > 0 && offset >= curr_pos) {
  					PDEBUG("GOTO MORE PROXIES 0\n");
 					/* We've gone back to the start and now past our starting position */
-					proxychains_proxy_offset = 0;
+					pseudo_proxy_offset = 0;
  					goto error_more;
  				}
  				PDEBUG("2:rr_offset = %d\n", offset);
@@ -637,11 +637,11 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 					p1 = p2;
 				curr_len++;
 			}
-			//proxychains_write_log(TP);
+			//pseudo_write_log(TP);
 			p3->ip = target_ip;
 			p3->port = target_port;
-			proxychains_proxy_offset = offset+1;
-			PDEBUG("pd_offset = %d, curr_len = %d\n", proxychains_proxy_offset, curr_len);
+			pseudo_proxy_offset = offset+1;
+			PDEBUG("pd_offset = %d, curr_len = %d\n", pseudo_proxy_offset, curr_len);
 			if(SUCCESS != chain_step(ns, p1, p3))
 				goto error;
 			break;
@@ -666,7 +666,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 				}
 				p1 = p2;
 			}
-			//proxychains_write_log(TP);
+			//pseudo_write_log(TP);
 			p3->ip = target_ip;
 			p3->port = target_port;
 			if(SUCCESS != chain_step(ns, p1, p3))
@@ -691,7 +691,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 				}
 				p1 = p2;
 			}
-			//proxychains_write_log(TP);
+			//pseudo_write_log(TP);
 			p3->ip = target_ip;
 			p3->port = target_port;
 			if(SUCCESS != chain_step(ns, p1, p3))
@@ -699,7 +699,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 
 	}
 
-	proxychains_write_log(TP " OK\n");
+	pseudo_write_log(TP " OK\n");
 	dup2(ns, sock);
 	close(ns);
 	return 0;
@@ -710,7 +710,7 @@ int connect_proxy_chain(int sock, ip_type target_ip,
 	return -1;
 
 	error_more:
-	proxychains_write_log("\n!!!need more proxies!!!\n");
+	pseudo_write_log("\n!!!need more proxies!!!\n");
 	error_strict:
 	PDEBUG("error\n");
 	

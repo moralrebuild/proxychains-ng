@@ -13,7 +13,7 @@ ProxyChains-NG ver 4.12 README
   It should work with simple compiled (C/C++) dynamically linked programs
   though.
 
-  If your program doesn't work with proxychains, consider using an
+  If your program doesn't work with pseudo, consider using an
   iptables based solution instead; this is much more robust.
 
   Supported Platforms: Linux, BSD, Mac.
@@ -24,7 +24,7 @@ ProxyChains-NG ver 4.12 README
   this program can be used to circumvent censorship.
   doing so can be VERY DANGEROUS in certain countries.
 
-  ALWAYS MAKE SURE THAT PROXYCHAINS WORKS AS EXPECTED
+  ALWAYS MAKE SURE THAT PSEUDO WORKS AS EXPECTED
   BEFORE USING IT FOR ANYTHING SERIOUS.
 
   this involves both the program and the proxy that you're going to
@@ -33,9 +33,9 @@ ProxyChains-NG ver 4.12 README
   for example, you can connect to some "what is my ip" service
   like ifconfig.me to make sure that it's not using your real ip.
 
-  ONLY USE PROXYCHAINS IF YOU KNOW WHAT YOU'RE DOING.
+  ONLY USE PSEUDO IF YOU KNOW WHAT YOU'RE DOING.
 
-  THE AUTHORS AND MAINTAINERS OF PROXYCHAINS DO NOT TAKE ANY
+  THE AUTHORS AND MAINTAINERS OF PSEUDO DO NOT TAKE ANY
   RESPONSIBILITY FOR ANY ABUSE OR MISUSE OF THIS SOFTWARE AND
   THE RESULTING CONSEQUENCES.
 
@@ -45,10 +45,10 @@ ProxyChains-NG ver 4.12 README
   ./configure --prefix=/usr --sysconfdir=/etc
   make
   [optional] sudo make install
-  [optional] sudo make install-config (installs proxychains.conf)
+  [optional] sudo make install-config (installs pseudo.conf)
 
-  if you dont install, you can use proxychains from the build directory
-  like this: ./proxychains4 -f src/proxychains.conf telnet google.com 80
+  if you dont install, you can use pseudo from the build directory
+  like this: ./pseudo4 -f src/pseudo.conf telnet google.com 80
 
 Changelog:
 ----------
@@ -166,27 +166,27 @@ Some cool features:
 Configuration:
 --------------
 
-proxychains looks for config file in following order:
-1)	file listed in environment variable PROXYCHAINS_CONF_FILE or
-	provided as a -f argument to proxychains script or binary.
-2)	./proxychains.conf
-3)	$(HOME)/.proxychains/proxychains.conf
-4)	$(sysconfdir)/proxychains.conf  **
+pseudo looks for config file in following order:
+1)	file listed in environment variable PSEUDO_CONF_FILE or
+	provided as a -f argument to pseudo script or binary.
+2)	./pseudo.conf
+3)	$(HOME)/.pseudo/pseudo.conf
+4)	$(sysconfdir)/pseudo.conf  **
 
-** usually /etc/proxychains.conf
+** usually /etc/pseudo.conf
 
 Usage Example:
 
-	$ proxychains telnet targethost.com
+	$ pseudo telnet targethost.com
 
 in this example it will run telnet through proxy(or chained proxies)
-specified by proxychains.conf
+specified by pseudo.conf
 
 Usage Example:
 
-	$ proxychains -f /etc/proxychains-other.conf telnet targethost2.com
+	$ pseudo -f /etc/pseudo-other.conf telnet targethost2.com
 
-in this example it will use different configuration file then proxychains.conf
+in this example it will use different configuration file then pseudo.conf
 to connect to targethost2.com host.
 
 Usage Example:
@@ -194,13 +194,13 @@ Usage Example:
 	$ proxyresolv targethost.com
 
 in this example it will resolve targethost.com through proxy(or chained proxies)
-specified by proxychains.conf
+specified by pseudo.conf
 
 Known Problems:
 ---------------
 - newer versions of nmap try to determine the network interface to use
   even if it's not needed (like when doing simple syn scans which use the
-  standard POSIX socket API. this results in errors when proxychains hands
+  standard POSIX socket API. this results in errors when pseudo hands
   out an ip address to a reserved address space.
   possible workarounds: disable proxy_dns, use a numeric ip, or use nmap's
   native support for SOCKS proxies.
@@ -222,7 +222,7 @@ Known Problems:
 
 Community:
 ----------
-#proxychains on irc.freenode.net
+#pseudo on irc.freenode.net
 
 Donations:
 ----------

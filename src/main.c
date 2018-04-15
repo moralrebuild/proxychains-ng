@@ -23,9 +23,9 @@
 
 static int usage(char **argv) {
 	printf("\nUsage:\t%s -q -f config_file program_name [arguments]\n"
-	       "\t-q makes proxychains quiet - this overrides the config setting\n"
+	       "\t-q makes pseudo quiet - this overrides the config setting\n"
 	       "\t-f allows one to manually specify a configfile to use\n"
-	       "\tfor example : proxychains telnet somehost.com\n" "More help in README file\n\n", argv[0]);
+	       "\tfor example : pseudo telnet somehost.com\n" "More help in README file\n\n", argv[0]);
 	return EXIT_FAILURE;
 }
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 	const char *prefix = NULL;
 
 	if(argc == 2 && !strcmp(argv[1], "--help"))
-		return usage(argv);
+		return 99;
 
 	for(i = 0; i < MAX_COMMANDLINE_FLAGS; i++) {
 		if(start_argv < argc && argv[start_argv][0] == '-') {
@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
 				if(start_argv + 1 < argc)
 					path = argv[start_argv + 1];
 				else
-					return usage(argv);
+					return 99;
 
 				start_argv += 2;
 			}
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	if(start_argv >= argc)
-		return usage(argv);
+		return 99;
 
 	/* check if path of config file has not been passed via command line */
 	path = get_config_path(path, pbuf, sizeof(pbuf));
@@ -102,11 +102,11 @@ int main(int argc, char *argv[]) {
 	if(!quiet)
 		fprintf(stderr, LOG_PREFIX "config file found: %s\n", path);
 
-	/* Set PROXYCHAINS_CONF_FILE to get proxychains lib to use new config file. */
-	setenv(PROXYCHAINS_CONF_FILE_ENV_VAR, path, 1);
+	/* Set PSEUDO_CONF_FILE to get pseudo lib to use new config file. */
+	setenv(PSEUDO_CONF_FILE_ENV_VAR, path, 1);
 
 	if(quiet)
-		setenv(PROXYCHAINS_QUIET_MODE_ENV_VAR, "1", 1);
+		setenv(PSEUDO_QUIET_MODE_ENV_VAR, "1", 1);
 
 
 	// search DLL
@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
 	         old_val ? old_val : "");
 	putenv(buf);
 	execvp(argv[start_argv], &argv[start_argv]);
-	perror("proxychains can't load process....");
+	perror("pseudo can't load process....");
 
 	return EXIT_FAILURE;
 }

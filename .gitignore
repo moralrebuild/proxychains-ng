@@ -1,4 +1,4 @@
-proxychains4
+pseudo4
 *.bz2
 *.xz
 *.o

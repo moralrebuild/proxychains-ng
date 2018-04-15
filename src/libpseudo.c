@@ -1,5 +1,5 @@
 /***************************************************************************
-                          libproxychains.c  -  description
+                          libpseudo.c  -  description
                              -------------------
     begin                : Tue May 14 2002
     copyright          :  netcreature (C) 2002
@@ -62,14 +62,14 @@ sendto_t true_sendto;
 
 int tcp_read_time_out;
 int tcp_connect_time_out;
-chain_type proxychains_ct;
-proxy_data proxychains_pd[MAX_CHAIN];
-unsigned int proxychains_proxy_count = 0;
-unsigned int proxychains_proxy_offset = 0;
-int proxychains_got_chain_data = 0;
-unsigned int proxychains_max_chain = 1;
-int proxychains_quiet_mode = 0;
-int proxychains_resolver = 0;
+chain_type pseudo_ct;
+proxy_data pseudo_pd[MAX_CHAIN];
+unsigned int pseudo_proxy_count = 0;
+unsigned int pseudo_proxy_offset = 0;
+int pseudo_got_chain_data = 0;
+unsigned int pseudo_max_chain = 1;
+int pseudo_quiet_mode = 0;
+int pseudo_resolver = 0;
 localaddr_arg localnet_addr[MAX_LOCALNET];
 size_t num_localnet_addr = 0;
 unsigned int remote_dns_subnet = 224;
@@ -103,7 +103,7 @@ static void* load_sym(char* symname, void* proxyfunc) {
 
 #include "allocator_thread.h"
 
-const char *proxychains_get_version(void);
+const char *pseudo_get_version(void);
 
 static void setup_hooks(void) {
 	SETUP_SYM(connect);
@@ -128,10 +128,10 @@ static void do_init(void) {
 	at_init();
 
 	/* read the config file */
-	get_chain_data(proxychains_pd, &proxychains_proxy_count, &proxychains_ct);
-	DUMP_PROXY_CHAIN(proxychains_pd, proxychains_proxy_count);
+	get_chain_data(pseudo_pd, &pseudo_proxy_count, &pseudo_ct);
+	DUMP_PROXY_CHAIN(pseudo_pd, pseudo_proxy_count);
 
-	proxychains_write_log(LOG_PREFIX "DLL init: proxychains-ng %s\n", proxychains_get_version());
+	pseudo_write_log(LOG_PREFIX "DLL init: pseudo-ng %s\n", pseudo_get_version());
 
 	setup_hooks();
 
@@ -169,7 +169,7 @@ static void get_chain_data(proxy_data * pd, unsigned int *proxy_count, chain_typ
 	char local_in_addr[32], local_in_port[32], local_netmask[32];
 	FILE *file = NULL;
 
-	if(proxychains_got_chain_data)
+	if(pseudo_got_chain_data)
 		return;
 
 	//Some defaults
@@ -177,16 +177,16 @@ static void get_chain_data(proxy_data * pd, unsigned int *proxy_count, chain_typ
 	tcp_connect_time_out = 10 * 1000;
 	*ct = DYNAMIC_TYPE;
 
-	env = get_config_path(getenv(PROXYCHAINS_CONF_FILE_ENV_VAR), buff, sizeof(buff));
+	env = get_config_path(getenv(PSEUDO_CONF_FILE_ENV_VAR), buff, sizeof(buff));
 	if( ( file = fopen(env, "r") ) == NULL )
 	{
 	        perror("couldnt read configuration file");
         	exit(1);
 	}
 
-	env = getenv(PROXYCHAINS_QUIET_MODE_ENV_VAR);
+	env = getenv(PSEUDO_QUIET_MODE_ENV_VAR);
 	if(env && *env == '1')
-		proxychains_quiet_mode = 1;
+		pseudo_quiet_mode = 1;
 
 	while(fgets(buff, sizeof(buff), file)) {
 		if(buff[0] != '\n' && buff[strspn(buff, " ")] != '#') {
@@ -299,11 +299,11 @@ static void get_chain_data(proxy_data * pd, unsigned int *proxy_count, chain_typ
 						exit(1);
 					}
 					len = atoi(++pc);
-					proxychains_max_chain = (len ? len : 1);
+					pseudo_max_chain = (len ? len : 1);
 				} else if(strstr(buff, "quiet_mode")) {
-					proxychains_quiet_mode = 1;
+					pseudo_quiet_mode = 1;
 				} else if(strstr(buff, "proxy_dns")) {
-					proxychains_resolver = 1;
+					pseudo_resolver = 1;
 				}
 			}
 		}
@@ -316,7 +316,7 @@ static void get_chain_data(proxy_data * pd, unsigned int *proxy_count, chain_typ
 		exit(1);
 	}
 	*proxy_count = count;
-	proxychains_got_chain_data = 1;
+	pseudo_got_chain_data = 1;
 }
 
 /*******  HOOK FUNCTIONS  *******/
@@ -400,7 +400,7 @@ int connect(int sock, const struct sockaddr *addr, unsigned int len) {
 	ret = connect_proxy_chain(sock,
 				  dest_ip,
 				  htons(port),
-				  proxychains_pd, proxychains_proxy_count, proxychains_ct, proxychains_max_chain);
+				  pseudo_pd, pseudo_proxy_count, pseudo_ct, pseudo_max_chain);
 
 	fcntl(sock, F_SETFL, flags);
 	if(ret != SUCCESS)
@@ -419,7 +419,7 @@ struct hostent *gethostbyname(const char *name) {
 	INIT();
 	PDEBUG("gethostbyname: %s\n", name);
 
-	if(proxychains_resolver)
+	if(pseudo_resolver)
 		return proxy_gethostbyname(name, &ghbndata);
 	else
 		return true_gethostbyname(name);
@@ -431,7 +431,7 @@ int getaddrinfo(const char *node, const char *service, const struct addrinfo *hi
 	INIT();
 	PDEBUG("getaddrinfo: %s %s\n", node ? node : "null", service ? service : "null");
 
-	if(proxychains_resolver)
+	if(pseudo_resolver)
 		return proxy_getaddrinfo(node, service, hints, res);
 	else
 		return true_getaddrinfo(node, service, hints, res);
@@ -441,7 +441,7 @@ void freeaddrinfo(struct addrinfo *res) {
 	INIT();
 	PDEBUG("freeaddrinfo %p \n", (void *) res);
 
-	if(!proxychains_resolver)
+	if(!pseudo_resolver)
 		true_freeaddrinfo(res);
 	else
 		proxy_freeaddrinfo(res);
@@ -454,7 +454,7 @@ int pc_getnameinfo(const struct sockaddr *sa, socklen_t salen,
 	INIT();
 	PFUNC();
 
-	if(!proxychains_resolver) {
+	if(!pseudo_resolver) {
 		return true_getnameinfo(sa, salen, host, hostlen, serv, servlen, flags);
 	} else {
 		if(!salen || !(SOCKFAMILY(*sa) == AF_INET || SOCKFAMILY(*sa) == AF_INET6))
@@ -501,7 +501,7 @@ struct hostent *gethostbyaddr(const void *addr, socklen_t len, int type) {
 	static char *aliases[1];
 	static struct hostent he;
 
-	if(!proxychains_resolver)
+	if(!pseudo_resolver)
 		return true_gethostbyaddr(addr, len, type);
 	else {
 

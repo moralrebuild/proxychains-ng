@@ -60,32 +60,32 @@ char *get_config_path(char* default_path, char* pbuf, size_t bufsize) {
 	if(check_path(path))
 		goto have;
 
-	// priority 1: env var PROXYCHAINS_CONF_FILE
-	path = getenv(PROXYCHAINS_CONF_FILE_ENV_VAR);
+	// priority 1: env var PSEUDO_CONF_FILE
+	path = getenv(PSEUDO_CONF_FILE_ENV_VAR);
 	if(check_path(path))
 		goto have;
 
-	// priority 2; proxychains conf in actual dir
+	// priority 2; pseudo conf in actual dir
 	path = getcwd(buf, sizeof(buf));
-	snprintf(pbuf, bufsize, "%s/%s", path, PROXYCHAINS_CONF_FILE);
+	snprintf(pbuf, bufsize, "%s/%s", path, PSEUDO_CONF_FILE);
 	path = pbuf;
 	if(check_path(path))
 		goto have;
 
-	// priority 3; $HOME/.proxychains/proxychains.conf
+	// priority 3; $HOME/.pseudo/pseudo.conf
 	path = getenv("HOME");
-	snprintf(pbuf, bufsize, "%s/.proxychains/%s", path, PROXYCHAINS_CONF_FILE);
+	snprintf(pbuf, bufsize, "%s/.pseudo/%s", path, PSEUDO_CONF_FILE);
 	path = pbuf;
 	if(check_path(path))
 		goto have;
 
-	// priority 4: $SYSCONFDIR/proxychains.conf
-	path = SYSCONFDIR "/" PROXYCHAINS_CONF_FILE;
+	// priority 4: $SYSCONFDIR/pseudo.conf
+	path = SYSCONFDIR "/" PSEUDO_CONF_FILE;
 	if(check_path(path))
 		goto have;
 
-	// priority 5: /etc/proxychains.conf
-	path = "/etc/" PROXYCHAINS_CONF_FILE;
+	// priority 5: /etc/pseudo.conf
+	path = "/etc/" PSEUDO_CONF_FILE;
 	if(check_path(path))
 		goto have;
 
