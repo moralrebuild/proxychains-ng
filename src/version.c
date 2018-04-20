@@ -1,6 +1,6 @@
 #include "version.h"
 static const char version[] = VERSION;
-const char *pseudo_get_version(void) {
+const char *whois_get_version(void) {
 	return version;
 }
 

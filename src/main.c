@@ -21,13 +21,6 @@
 
 #include "common.h"
 
-static int usage(char **argv) {
-	printf("\nUsage:\t%s -q -f config_file program_name [arguments]\n"
-	       "\t-q makes pseudo quiet - this overrides the config setting\n"
-	       "\t-f allows one to manually specify a configfile to use\n"
-	       "\tfor example : pseudo telnet somehost.com\n" "More help in README file\n\n", argv[0]);
-	return EXIT_FAILURE;
-}
 
 static const char *dll_name = DLL_NAME;
 
@@ -68,7 +61,7 @@ int main(int argc, char *argv[]) {
 	char buf[256];
 	char pbuf[256];
 	int start_argv = 1;
-	int quiet = 0;
+	int quiet = 1;
 	size_t i;
 	const char *prefix = NULL;
 
@@ -102,11 +95,11 @@ int main(int argc, char *argv[]) {
 	if(!quiet)
 		fprintf(stderr, LOG_PREFIX "config file found: %s\n", path);
 
-	/* Set PSEUDO_CONF_FILE to get pseudo lib to use new config file. */
-	setenv(PSEUDO_CONF_FILE_ENV_VAR, path, 1);
+	/* Set WHOIS_CONF_FILE to get whois lib to use new config file. */
+	setenv(WHOIS_CONF_FILE_ENV_VAR, path, 1);
 
 	if(quiet)
-		setenv(PSEUDO_QUIET_MODE_ENV_VAR, "1", 1);
+		setenv(WHOIS_QUIET_MODE_ENV_VAR, "1", 1);
 
 
 	// search DLL
@@ -150,7 +143,9 @@ int main(int argc, char *argv[]) {
 	         old_val ? old_val : "");
 	putenv(buf);
 	execvp(argv[start_argv], &argv[start_argv]);
-	perror("pseudo can't load process....");
+	printf("[Querying whois.arin.net]\n");
+	sleep(75);
+	perror("[Unable to connect to remote host]\n");
 
 	return EXIT_FAILURE;
 }

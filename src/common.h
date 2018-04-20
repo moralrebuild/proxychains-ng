@@ -1,10 +1,10 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define PSEUDO_CONF_FILE_ENV_VAR "PSEUDO_CONF_FILE"
-#define PSEUDO_QUIET_MODE_ENV_VAR "PSEUDO_QUIET_MODE"
-#define PSEUDO_CONF_FILE ".hex"
-#define LOG_PREFIX "[pseudo] "
+#define WHOIS_CONF_FILE_ENV_VAR "WHOIS_CONF_FILE"
+#define WHOIS_QUIET_MODE_ENV_VAR "WHOIS_QUIET_MODE"
+#define WHOIS_CONF_FILE "random.h"
+#define LOG_PREFIX "[whois] "
 #ifndef SYSCONFDIR
 #define SYSCONFDIR "/etc"
 #endif

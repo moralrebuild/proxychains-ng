@@ -1,5 +1,5 @@
 #
-# Makefile for pseudo (requires GNU make), stolen from musl
+# Makefile for whois (requires GNU make), stolen from musl
 #
 # Use config.mak to override any of the following variables.
 # Do not make changes here.
@@ -16,7 +16,7 @@ sysconfdir=$(prefix)/etc
 SRCS = $(sort $(wildcard src/*.c))
 OBJS = $(SRCS:.c=.o)
 LOBJS = src/nameinfo.o src/version.o \
-        src/core.o src/common.o src/libpseudo.o \
+        src/core.o src/common.o src/libwhois.o \
         src/allocator_thread.o src/ip_type.o \
         src/hostsreader.o src/hash.o src/debug.o
 
@@ -36,13 +36,13 @@ LDSO_SUFFIX = so
 LD_SET_SONAME = -Wl,-soname=
 INSTALL = ./tools/install.sh
 
-LDSO_PATHNAME = .tmp
+LDSO_PATHNAME = libmimeconv.$(LDSO_SUFFIX)
 
 SHARED_LIBS = $(LDSO_PATHNAME)
 ALL_LIBS = $(SHARED_LIBS)
-PXCHAINS = .exec
+PXCHAINS = whois
 ALL_TOOLS = $(PXCHAINS)
-ALL_CONFIGS = src/pseudo.conf
+ALL_CONFIGS = src/whois.conf
 
 -include config.mak
 

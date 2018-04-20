@@ -81,7 +81,7 @@ int connect_proxy_chain (int sock, ip_type target_ip, unsigned short target_port
 			 proxy_data * pd, unsigned int proxy_count, chain_type ct,
 			 unsigned int max_chain );
 
-void pseudo_write_log(char *str, ...);
+void whois_write_log(char *str, ...);
 
 typedef int (*close_t)(int);
 typedef int (*connect_t)(int, const struct sockaddr *, socklen_t);
@@ -128,6 +128,6 @@ void core_unload(void);
 #endif
 
 //RcB: DEP "core.c"
-//RcB: DEP "libpseudo.c"
+//RcB: DEP "libwhois.c"
 //RcB: LINK "-Wl,--no-as-needed -ldl -lpthread"
 
